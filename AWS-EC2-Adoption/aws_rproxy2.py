@@ -141,7 +141,7 @@ if __name__ == "__main__":
     args = option_check()
     s = socket.socket()         # Create a socket object
     # host = socket.gethostname() # Get local machine name
-    host = '172.31.21.133'
+    host = '172.31.93.33'
     port = int(args[0])              # Reserve a port for your service.
     print("Running reverse proxy on port", port)
 
