@@ -1,9 +1,7 @@
-
 # Import required modules
 import socket
 import _thread
 import threading
-import hashlib
 import json
 import sys
 
@@ -11,99 +9,73 @@ import sys
 # Enable locking for a thread
 print_lock = threading.Lock()
 
-# Option Set Up #
+# Configuración de opciones #
 
 def option_check():
     global args
 
-    # all available argument options
+    # Argumentos recibidos
     avail_options = ["-id", "-pp", "-listen", "-revproc"]
 
-    # receive user given options
+    #Recibe opciones y argumentos dados por el cliente
     options = [opt for opt in sys.argv[1:] if opt.startswith("-")]
-
-    # receive user given arguments
     args = [arg for arg in sys.argv[1:] if not arg.startswith("-")]
 
-    # raise error if user given option is wrong
+    #Error en caso de que las opciones no sean válidos
     for i in options:
         if i not in avail_options:
             raise SystemExit(f"Usage: {sys.argv[0]} (-id & -pp & -listen & -revproc) <argument>...")
 
-    # raise error if not all options or arguments are available
+    #Error en caso de que no todas las opciones o argumentos sean válidos
     if len(options) != 4 or len(args) != 4:
         raise SystemExit(f"Usage: {sys.argv[0]} (-id & -pp & -listen & -revproc) <argument>...")
 
-# Basic Server Functions #
+# Funciones básicas #
 
-# after receiving each connection from reverse proxy/client
+# Establecer nueva conexión con proxy
+# Después de recibir la petición del proxy
 def on_new_client(clientsocket,addr):
     while True:
-
-        msg = clientsocket.recv(2048)
+        #Petición recibida
+        msg = clientsocket.recv(2048).decode()
+        ip, port = clientsocket.getpeername()
+        #Evaluamos que la petición no esté vacía
         if not msg:
             # lock released on exit
             print_lock.release()
             break
-
-        json_msg = json.loads(msg.decode())
-        print("Received a message from client", json_msg["srcid"], "payload", json_msg["payload"])
-        payload = json_msg["payload"]
-        new_msg = hashlib.sha1()
-        new_msg.update(payload.encode())
-        hashed_payload = new_msg.hexdigest()
-        new_json_msg = {"type":"2", "srcid": str(args[0]), "destid": json_msg["srcid"],\
-                        "payloadsize": len(hashed_payload), "payload": hashed_payload, "response": "Hola mundito"}        
-        print("Sending a message to the client", new_json_msg["destid"], "payload", new_json_msg["payload"], "response", new_json_msg["response"])
-        clientsocket.send(json.dumps(new_json_msg).encode())
+        
+        response='HTTP/1.0 200 OK\n\nRESPUESTA SERVER'     
+        print("Sending a message to the client", ip, "port", port, "response", response)
+        clientsocket.send(response.encode())
+    #Cerramos conexión con proxy
     clientsocket.close()
 
 
-# Connect to the Reverse Proxy
-def connect_reverse_proxy():
-    new_json_msg = {"type":"1", "id": str(args[0]), "privPolyId": str(args[1]),\
-                        "listenport": str(args[2])}
-    rev_proxy_name = '172.31.93.33'
-    # rev_proxy_name = '127.0.0.1'
-    rev_proxy_port = int(args[3])
-
-    rev_proxy_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    rev_proxy_socket.connect((rev_proxy_name, rev_proxy_port))
-
-    rev_proxy_socket.send(json.dumps(new_json_msg).encode())
-    rev_proxy_socket.close()
-
-
-# Main Function #
+# Función Main #
 
 if __name__ == "__main__":
     option_check()
-    s = socket.socket()         # Create a socket object
-    host = '172.31.21.234' 
-    # Server_01= 172.31.94.170 
-    # Server_02= 172.31.89.146               # Get local machine name
-    port = int(args[2])              # Reserve a port for your service.
+    #Creamos objeto socket
+    s = socket.socket()
+    host = '172.31.21.234'      # ip de la instancia donde corre el server
+    #El puerto se recibe como argumento
+    port = int(args[2])
 
 
-    print ("Server running with id", args[0])
-    print ("Server serving privacy policy", args[1])
-    print ("Listening on port", args[2])
+    print ("Server corriendo con id", args[0])
+    print ("Esperando en puerto", args[2])
     
-    # Broadcast "Alive" status to the Reverse Proxy first
-    connect_reverse_proxy()
-    print ("Connecting to reverse proxy on port", args[3])
-
-    # Binds to the port
+    
     s.bind((host, port))     
-    # Allow 10 clients to connect
+    #Se permite tener hasta 10 clientes conectados
     s.listen(10)                 
 
-    # Receive/Process each client connection in a seperate thread
+    #Recibe cada conexión en un hilo diferente
     while True:
-        c, addr = s.accept()     # Establish connection with client.
-        # lock acquired by client
+        c, addr = s.accept()     # Establecemos conexión con el proxy
         print_lock.acquire()
-        print ('Received a message from client', addr, "payload")
+        print ('Mensaje recibido del cliente con ip', addr)
         _thread.start_new_thread(on_new_client,(c,addr))
         
     s.close()
