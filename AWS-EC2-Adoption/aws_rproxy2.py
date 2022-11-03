@@ -32,13 +32,12 @@ def option_check():
 
     return args
 
-
 # Funciones básicas #
 
-#Función que servirá para iterar entre los servidores disponibles
-servers=[['172.31.21.234', '8080'], ['google.com', '']]
+#Lista de servidores disponibles y sus puertos
+servers=[['172.31.94.170', '8080'], ['172.31.89.146', '8080']]
 n = -1
-
+#Función que servirá para iterar entre los servidores disponibles
 def round_rob_server():
   global n
   n = n + 1
@@ -49,37 +48,36 @@ def round_rob_server():
 # Establecer nueva conexión (cliente o servidor)
 def on_new_client(clientsocket,addr):
     while True:
-        #Petición recibida idor y formato HTTP/1.1 si es una petición de un cliente
-        request = clientsocket.recv(1024).decode()             
-        #requestjson={}
+        #Petición recibida
+        request = clientsocket.recv(1024).decode()
         print("**************************************")
         print("Nueva petición de recibida")  
         #Evaluamos que la petición no esté vacía
         if not request:
             print_lock.release()
             break
-        #En caso de que la conexión sea proveniente de un cliente, su petición es enviada a los servidores disponibles.
-        #La respuesta de los servers se le entrega dal cliente.
         print("request: ", request)
         #Obtener datos del cliente (ip y puerto)
         ip, port = clientsocket.getpeername()
         print ('Mensaje recibido del cliente: ', ip, \
-                                            "port ", port)
+                                            "port ", port)  
+        #Obtenemos el servidor a contactar
         contact_server = round_rob_server()
+        #La ip y el puerto de los server se toma de la lista de servidores en base a Round Robin
         server_name = contact_server[0]
         server_port = int(contact_server[1])
         server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         server_socket.connect((server_name,server_port))        
         print("Reenviando datos a servidor con ip", server_name, \
                                                 "port", server_port)
+        #La petición es enviada al servidor
         server_socket.send(request.encode())
+        #La respuesta del servidor se devuelve al cliente
         response = server_socket.recv(2048).decode()
         print("Response recibida", response)
         print("")
         #Cerramos conexión con el server
         server_socket.close()
-        #Enviamos HTTP response al cliente
-        #response = 'HTTP/1.0 200 OK\n\n'+response
         print("Enviando response", response,)
         clientsocket.sendall(response.encode())
         print("Response se ha envíado al cliente correctamente")
@@ -93,7 +91,7 @@ if __name__ == "__main__":
     args = option_check()
     #Creamos objeto socket
     s = socket.socket()  
-    host = '172.31.21.133' # ip de la instancia donde corre el proxy
+    host = '172.31.93.33' # ip de la instancia donde corre el proxy
     #El puerto se recibe como argumento
     port = int(args[0])              
     print("Ejecutando PILB en puerto", port)

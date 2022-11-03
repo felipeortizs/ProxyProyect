@@ -30,6 +30,7 @@ def option_check():
     if len(options) != 4 or len(args) != 4:
         raise SystemExit(f"Usage: {sys.argv[0]} (-id & -pp & -listen & -revproc) <argument>...")
 
+
 # Funciones básicas #
 
 # Establecer nueva conexión con proxy
@@ -38,18 +39,19 @@ def on_new_client(clientsocket,addr):
     while True:
         #Petición recibida
         msg = clientsocket.recv(2048).decode()
+        #Obtener datos del cliente (ip y puerto)
         ip, port = clientsocket.getpeername()
         #Evaluamos que la petición no esté vacía
         if not msg:
-            # lock released on exit
             print_lock.release()
             break
-        
-        response='HTTP/1.0 200 OK\n\nRESPUESTA SERVER'     
-        print("Sending a message to the client", ip, "port", port, "response", response)
+        #Response a enviar
+        response='HTTP/1.0 200 OK\n\nConexión establecida con el servidor' 
+        print("Mensaje recibido del cliente: ", ip, "port", port, "response", response)
         clientsocket.send(response.encode())
     #Cerramos conexión con proxy
     clientsocket.close()
+
 
 
 # Función Main #
@@ -62,11 +64,9 @@ if __name__ == "__main__":
     #El puerto se recibe como argumento
     port = int(args[2])
 
-
     print ("Server corriendo con id", args[0])
-    print ("Esperando en puerto", args[2])
-    
-    
+    print ("Esperando en puerto", args[1])
+        
     s.bind((host, port))     
     #Se permite tener hasta 10 clientes conectados
     s.listen(10)                 
