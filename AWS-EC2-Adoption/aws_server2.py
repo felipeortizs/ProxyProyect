@@ -2,7 +2,6 @@
 import socket
 import _thread
 import threading
-import json
 import sys
 
 
@@ -21,7 +20,7 @@ def option_check():
     options = [opt for opt in sys.argv[1:] if opt.startswith("-")]
     args = [arg for arg in sys.argv[1:] if not arg.startswith("-")]
 
-    #Error en caso de que las opciones no sean válidos
+    #Error en caso de que las opciones no sean válidas
     for i in options:
         if i not in avail_options:
             raise SystemExit(f"Usage: {sys.argv[0]} (-id & -pp & -listen & -revproc) <argument>...")
@@ -46,7 +45,7 @@ def on_new_client(clientsocket,addr):
             print_lock.release()
             break
         #Response a enviar
-        response='HTTP/1.0 200 OK\n\nConexión establecida con el servidor' 
+        response='HTTP/1.0 200 OK\n\nConexión establecida con el server' 
         print("Mensaje recibido del cliente: ", ip, "port", port, "response", response)
         clientsocket.send(response.encode())
     #Cerramos conexión con proxy

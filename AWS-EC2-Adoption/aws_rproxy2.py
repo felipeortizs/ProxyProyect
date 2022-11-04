@@ -34,7 +34,7 @@ def option_check():
 
 # Funciones básicas #
 
-#Lista de servidores disponibles y sus puertos
+#Array de servidores disponibles con su respectivo puerto
 servers=[['172.31.94.170', '8080'], ['172.31.89.146', '8080']]
 n = -1
 #Función que servirá para iterar entre los servidores disponibles
@@ -45,19 +45,19 @@ def round_rob_server():
      n = 0
   return servers[n]
     
-# Establecer nueva conexión (cliente o servidor)
+#  Establece una conexión entre cliente o servidor
 def on_new_client(clientsocket,addr):
     while True:
         #Petición recibida
         request = clientsocket.recv(1024).decode()
-        print("**************************************")
-        print("Nueva petición de recibida")  
+        print("************")
+        print("Nueva peticion entrante")  
         #Evaluamos que la petición no esté vacía
         if not request:
             print_lock.release()
             break
         print("request: ", request)
-        #Obtener datos del cliente (ip y puerto)
+        #Datos del cliente (ip y puerto)
         ip, port = clientsocket.getpeername()
         print ('Mensaje recibido del cliente: ', ip, \
                                             "port ", port)  
@@ -74,13 +74,13 @@ def on_new_client(clientsocket,addr):
         server_socket.send(request.encode())
         #La respuesta del servidor se devuelve al cliente
         response = server_socket.recv(2048).decode()
-        print("Response recibida", response)
+        print("Respuesta recibida", response)
         print("")
         #Cerramos conexión con el server
         server_socket.close()
-        print("Enviando response", response,)
+        print("Enviando respuesta", response,)
         clientsocket.sendall(response.encode())
-        print("Response se ha envíado al cliente correctamente")
+        print("la respuesta se ha envíado al cliente exitosamente")
         break
     #Cerramos conexión con el cliente
     clientsocket.close()
@@ -94,7 +94,7 @@ if __name__ == "__main__":
     host = '172.31.93.33' # ip de la instancia donde corre el proxy
     #El puerto se recibe como argumento
     port = int(args[0])              
-    print("Ejecutando PILB en puerto", port)
+    print("Ejecutando Proxy en puerto", port)
     s.bind((host, port))     
     #Se permite tener hasta 10 clientes conectados
     s.listen(100)
